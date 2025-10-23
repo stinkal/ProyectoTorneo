@@ -1,11 +1,15 @@
-#include "mainwindow.h"
+#include <iostream>
+#include "modelos/equipo.h"
 
-#include <QApplication>
+int main() {
+    Equipo e1("Dragones");
+    Equipo e2("Tiburones");
 
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-    return a.exec();
+    e1.sumarPuntos(3);
+    e2.sumarPuntos(1);
+
+    cout << e1.getNombre() << " tiene " << e1.getPuntos() << " puntos.\n";
+    cout << e2.getNombre() << " tiene " << e2.getPuntos() << " puntos.\n";
+
+    return 0;
 }
