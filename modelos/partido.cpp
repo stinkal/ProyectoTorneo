@@ -1,5 +1,5 @@
 #include "partido.h"
-#include <sstream>  //stringstream
+#include <sstream>
 
 Partido::Partido(Equipo* local, Equipo* visitante)
     : local(local), visitante(visitante), golesLocal(0), golesVisitante(0), jugado(false) {}
@@ -14,20 +14,10 @@ void Partido::registrarResultado(int gLocal, int gVisitante) {
     golesLocal = gLocal;
     golesVisitante = gVisitante;
     jugado = true;
-
-    // actualiza puntos para grupos
-    if (gLocal > gVisitante) {
-        local->sumarPuntos(3);   // gana local
-    } else if (gLocal < gVisitante) {
-        visitante->sumarPuntos(3); // gana visitante
-    } else {
-        local->sumarPuntos(1);     // empate
-        visitante->sumarPuntos(1);
-    }
 }
 
 string Partido::getResumen() const {
-    stringstream ss;
+    std::stringstream ss;
     ss << local->getNombre() << " (" << golesLocal << ") - "
        << visitante->getNombre() << " (" << golesVisitante << ")";
     return ss.str();
