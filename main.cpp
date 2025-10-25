@@ -1,35 +1,41 @@
 #include <iostream>
+#include <vector>
+#include "estructuras/arbol.h"
 #include "modelos/equipo.h"
-#include "modelos/partido.h"
-#include "modelos/grupo.h"
 
-// MUCHOS IMPLEMENTACIONES SON TEMPORALES PARA DEMOSTRAR FUNCIONALIDAD EN LA CONSOLA
+using namespace std;
 
 int main() {
-    Equipo e1("Equipo 1");   //eventualmente seran widgets qmake
-    Equipo e2("Equipo 2");  
-    Equipo e3("Equipo 3");
-    Equipo e4("Equipo 4");
+    cout << "=== PRUEBA DE TORNEO ===" << endl;
 
-    Grupo grupoA("A");
-    grupoA.agregarEquipo(&e1);
-    grupoA.agregarEquipo(&e2);
-    grupoA.agregarEquipo(&e3);
-    grupoA.agregarEquipo(&e4);
+    // Crear algunos equipos
+    vector<Equipo*> equipos;
+    equipos.push_back(new Equipo("Saprissa"));
+    equipos.push_back(new Equipo("Alajuelense"));
+    equipos.push_back(new Equipo("Heredia"));
+    equipos.push_back(new Equipo("Cartago"));
 
-    grupoA.listarEquipos();
-    grupoA.generarPartidos();
-    grupoA.listarPartidos();
+    // Crear árbol del torneo
+    Arbol torneo;
+    torneo.construir(equipos);
 
-    grupoA.registrarResultado(1, 2, 1);
-    grupoA.registrarResultado(2, 0, 0);
-    grupoA.registrarResultado(3, 3, 1);
-    grupoA.registrarResultado(4, 2, 1);
-    grupoA.registrarResultado(5, 0, 0);
-    grupoA.registrarResultado(6, 3, 1);
+    cout << "\n=== LLAVES DEL TORNEO ===" << endl;
+    torneo.mostrar(torneo.raiz);
 
-    grupoA.calcularPuntos();
-    grupoA.mostrarTablaPuntos();
+    cout << "\n=== COMIENZA EL TORNEO ===" << endl;
+    torneo.jugar(torneo.raiz);
+
+    cout << "\n=== RESULTADOS ===" << endl;
+    torneo.mostrar(torneo.raiz);
+
+    Equipo* campeon = torneo.obtenerCampeon();
+    if (campeon)
+        cout << "\nCAMPEÓN: " << campeon->getNombre() << endl;
+    else
+        cout << "\nNo se pudo determinar un campeón." << endl;
+
+    // Limpieza de memoria
+    for (Equipo* e : equipos) delete e;
 
     return 0;
 }
