@@ -4,6 +4,7 @@
 #include "../modelos/partido.h"
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 using namespace std;
 
 class NodoCola {
@@ -26,7 +27,7 @@ public:
     bool vacia() const;
     void encolar(Partido* p);
     Partido* desencolar();
-    void mostrarCola() const;
+    vector<string> mostrarCola() const;
     int tamano() const;
 };
 

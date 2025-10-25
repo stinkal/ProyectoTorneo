@@ -41,16 +41,16 @@ Partido* ColaPartidos::desencolar() {
     return p;
 }
 
-void ColaPartidos::mostrarCola() const {
+vector<string> ColaPartidos::mostrarCola() const {
+    vector<string> resumenes;
     if (vacia()) {
-        cout << "No hay partidos en la cola." << endl;
-        return;
+        resumenes.push_back("No hay partidos en la cola.");
+        return resumenes;
     }
 
     NodoCola* aux = frente;
-    cout << "\n=== CALENDARIO DE PARTIDOS ===" << endl;
     while (aux) {
-        cout << aux->partido->getResumen() << endl;
+        resumenes.push_back(aux->partido->getResumen());
         aux = aux->siguiente;
     }
 }
