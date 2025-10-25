@@ -2,6 +2,8 @@
 #include <iostream>
 using namespace std;
 
+//commit 2
+
 Arbol::Arbol() : raiz(nullptr) {}
 
 NodoArbol* Arbol::construirRec(const vector<Equipo*>& equipos, int inicio, int fin) {

@@ -5,17 +5,19 @@
 
 using namespace std;
 
+//commit 2
+
 int main() {
     cout << "=== PRUEBA DE TORNEO ===" << endl;
 
-    // Crear algunos equipos
+    // crear algunos equipos
     vector<Equipo*> equipos;
     equipos.push_back(new Equipo("Saprissa"));
     equipos.push_back(new Equipo("Alajuelense"));
     equipos.push_back(new Equipo("Heredia"));
     equipos.push_back(new Equipo("Cartago"));
 
-    // Crear árbol del torneo
+    // crear arbol del torneo
     Arbol torneo;
     torneo.construir(equipos);
 
@@ -34,7 +36,7 @@ int main() {
     else
         cout << "\nNo se pudo determinar un campeón." << endl;
 
-    // Limpieza de memoria
+    // limpieza de memoria
     for (Equipo* e : equipos) delete e;
 
     return 0;

@@ -5,6 +5,8 @@
 #include "../modelos/equipo.h"
 #include <vector>
 
+//commit 2
+
 struct NodoArbol {
     Partido* partido;
     NodoArbol* izquierda;
