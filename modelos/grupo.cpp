@@ -108,3 +108,13 @@ void Grupo::mostrarTablaPuntos() const {
         cout << left << setw(20) << e->getNombre() << e->getPuntos() << endl;
     }
 }
+
+vector<Equipo*> Grupo::getEquipos() const{
+    return equipos;
+}
+vector<Partido*> Grupo::getPartidosPtr() {
+    vector<Partido*> ptrs;
+    ptrs.reserve(partidos.size());   //  manejo de memoria
+    for (auto &p : partidos) ptrs.push_back(&p);
+    return ptrs;
+}

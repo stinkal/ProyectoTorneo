@@ -22,6 +22,9 @@ public:
     void calcularPuntos();
     void mostrarTablaPuntos() const;
 
+    vector<Equipo*> getEquipos() const;
+    vector<Partido*> getPartidosPtr();
+    
 private:
     string nombre;   //podrian ser numeros, pero creo que es mejor "grupo A, grupo B, etc."
     vector<Equipo*> equipos;
