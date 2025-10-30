@@ -6,7 +6,7 @@ NodoCola::NodoCola(Partido* p) : partido(p), siguiente(nullptr) {}
 // constructor de la cola
 ColaPartidos::ColaPartidos() : frente(nullptr), final(nullptr) {}
 
-// destructor para liberar los nodos
+// destructor
 ColaPartidos::~ColaPartidos() {
     while (!vacia()) {
         desencolar();
@@ -53,6 +53,7 @@ vector<string> ColaPartidos::mostrarCola() const {
         resumenes.push_back(aux->partido->getResumen());
         aux = aux->siguiente;
     }
+    return resumenes;
 }
 
 int ColaPartidos::tamano() const {
