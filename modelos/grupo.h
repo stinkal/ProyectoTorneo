@@ -6,11 +6,10 @@
 #include <iostream>
 #include "equipo.h"
 #include "partido.h"
-using namespace std;
 
 class Grupo {
 public:
-    Grupo(const string& nombre);
+    Grupo(const std::string& nombre);
 
     bool agregarEquipo(Equipo* equipo);
     void listarEquipos() const;
@@ -22,13 +21,13 @@ public:
     void calcularPuntos();
     void mostrarTablaPuntos() const;
 
-    vector<Equipo*> getEquipos() const;
-    vector<Partido*> getPartidosPtr();
-    
+    std::vector<Equipo*> getEquipos() const;
+    std::vector<Partido*> getPartidosPtr();
+
 private:
-    string nombre;   //podrian ser numeros, pero creo que es mejor "grupo A, grupo B, etc."
-    vector<Equipo*> equipos;
-    vector<Partido> partidos;
+    std::string nombre;   //podrian ser numeros, pero creo que es mejor "grupo A, grupo B, etc."
+    std::vector<Equipo*> equipos;
+    std::vector<Partido> partidos;
 
     bool partidosGenerados;
 };

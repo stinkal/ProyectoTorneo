@@ -5,7 +5,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-using namespace std;
+#include <string>
 
 class NodoCola {
 public:
@@ -27,8 +27,8 @@ public:
     bool vacia() const;
     void encolar(Partido* p);
     Partido* desencolar();
-    vector<string> mostrarCola() const;
+    std::vector<std::string> mostrarCola() const;
     int tamano() const;
 };
-//ejemplo
+
 #endif

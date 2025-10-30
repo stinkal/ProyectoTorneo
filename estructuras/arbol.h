@@ -20,9 +20,11 @@ public:
     Arbol();
     ~Arbol();
     NodoArbol* construir(const std::vector<Equipo*>& equipos);
+    NodoArbol* buscarPrimerPartidoNoJugado() const;
     void jugar(NodoArbol* nodo);
     Equipo* obtenerCampeon() const;
     void mostrar(NodoArbol* nodo, int nivel = 0) const;
+    std::vector<Partido*> obtenderPartidosPendientes() const;
 
 private:
     static NodoArbol* construirRec(const std::vector<Equipo*>& equipos, int inicio, int fin);

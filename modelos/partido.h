@@ -3,7 +3,6 @@
 
 #include <string>
 #include "equipo.h"
-using namespace std;
 
 class Partido {
 public:
@@ -16,7 +15,7 @@ public:
     bool estaJugado() const;
 
     void registrarResultado(int golesLocal, int golesVisitante); // imprime resultados, e.g. "Saprissa (2) - Liga (1)"
-    string getResumen() const;
+    std::string getResumen() const;
 
 private:
     Equipo* local;
