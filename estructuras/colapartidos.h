@@ -30,5 +30,5 @@ public:
     vector<string> mostrarCola() const;
     int tamano() const;
 };
-
+//ejemplo
 #endif
