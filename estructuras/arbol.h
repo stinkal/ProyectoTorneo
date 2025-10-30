@@ -5,8 +5,6 @@
 #include "../modelos/equipo.h"
 #include <vector>
 
-//commit 2
-
 struct NodoArbol {
     Partido* partido;
     NodoArbol* izquierda;
@@ -20,6 +18,7 @@ public:
     NodoArbol* raiz;
 
     Arbol();
+    ~Arbol();
     NodoArbol* construir(const std::vector<Equipo*>& equipos);
     void jugar(NodoArbol* nodo);
     Equipo* obtenerCampeon() const;
@@ -28,6 +27,7 @@ public:
 private:
     static NodoArbol* construirRec(const std::vector<Equipo*>& equipos, int inicio, int fin);
     Equipo* determinarGanador(Partido* partido) const;
+    void destruirRec(NodoArbol* nodo);
 };
 
 #endif

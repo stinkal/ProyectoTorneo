@@ -2,9 +2,22 @@
 #include <iostream>
 using namespace std;
 
-//commit 2
-
 Arbol::Arbol() : raiz(nullptr) {}
+Arbol::~Arbol() {
+    destruirRec(raiz);
+    raiz = nullptr;
+}
+
+void Arbol::destruirRec(NodoArbol* nodo) {
+    if (!nodo) return;
+    if (nodo->izquierda) destruirRec(nodo->izquierda);
+    if (nodo->derecha) destruirRec(nodo->derecha);
+    if (nodo->partido) {
+        delete nodo->partido;
+        nodo->partido = nullptr;
+    }
+    delete nodo;
+}
 
 NodoArbol* Arbol::construirRec(const vector<Equipo*>& equipos, int inicio, int fin) {
     if (inicio > fin) return nullptr;
