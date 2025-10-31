@@ -1,6 +1,7 @@
 #include "grupo.h"
 #include <iomanip>
 #include <algorithm>
+using namespace std;
 
 Grupo::Grupo(const string& nombre)
     : nombre(nombre), partidosGenerados(false) {}

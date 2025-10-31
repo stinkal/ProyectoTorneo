@@ -1,5 +1,6 @@
 #include "partido.h"
 #include <sstream>
+using namespace std;
 
 Partido::Partido(Equipo* local, Equipo* visitante)
     : local(local), visitante(visitante), golesLocal(0), golesVisitante(0), jugado(false) {}

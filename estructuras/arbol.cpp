@@ -1,5 +1,6 @@
 #include "arbol.h"
 #include <iostream>
+#include <functional>
 using namespace std;
 
 Arbol::Arbol() : raiz(nullptr) {}
@@ -17,6 +18,32 @@ void Arbol::destruirRec(NodoArbol* nodo) {
         nodo->partido = nullptr;
     }
     delete nodo;
+}
+
+static NodoArbol* buscarPrimerNoJugadoRec(NodoArbol* nodo) {
+    if (!nodo) return nullptr;
+    NodoArbol* left = buscarPrimerNoJugadoRec(nodo->izquierda);
+    if (left) return left;
+    NodoArbol* right = buscarPrimerNoJugadoRec(nodo->derecha);
+    if (right) return right;
+    if (nodo->partido && !nodo->partido->estaJugado()) return nodo;
+    return nullptr;
+}
+
+NodoArbol* Arbol::buscarPrimerPartidoNoJugado() const {
+    return buscarPrimerNoJugadoRec(raiz);
+}
+
+vector<Partido*> Arbol::obtenderPartidosPendientes() const {
+    vector<Partido*> pendientes;
+    function<void(NodoArbol*)> dfs = [&](NodoArbol* n) {
+        if (!n) return;
+        dfs(n->izquierda);
+        dfs(n->derecha);
+        if (n->partido && !n->partido->estaJugado()) pendientes.push_back(n->partido);
+    };
+    dfs(raiz);
+    return pendientes;
 }
 
 NodoArbol* Arbol::construirRec(const vector<Equipo*>& equipos, int inicio, int fin) {
@@ -63,17 +90,7 @@ void Arbol::jugar(NodoArbol* nodo) {
         Equipo* ganadorDer = determinarGanador(nodo->derecha->partido);
         if (ganadorIzq && ganadorDer)
             nodo->partido = new Partido(ganadorIzq, ganadorDer);
-        else
-            return; //  si hacen falta resultados
-    }
-
-    if (nodo->partido && !nodo->partido->estaJugado()) {
-        cout << "Ingrese resultado de "
-             << nodo->partido->getLocal()->getNombre() << " vs "
-             << nodo->partido->getVisitante()->getNombre() << " (ejemplo: 2 1): ";
-        int gL, gV;
-        cin >> gL >> gV;
-        nodo->partido->registrarResultado(gL, gV);
+        else return; //  si hacen falta resultados
     }
 }
 

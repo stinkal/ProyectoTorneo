@@ -1,8 +1,8 @@
 #include "equipo.h"
 
-Equipo::Equipo(const string& nombre) : nombre(nombre), puntos(0) {}
+Equipo::Equipo(const std::string& nombre) : nombre(nombre), puntos(0) {}
 
-string Equipo::getNombre() const {
+std::string Equipo::getNombre() const {
     return nombre;
 }
 
@@ -10,7 +10,7 @@ int Equipo::getPuntos() const {
     return puntos;
 }
 
-void Equipo::setNombre(const string& n) {
+void Equipo::setNombre(const std::string& n) {
     nombre = n;
 }
 
