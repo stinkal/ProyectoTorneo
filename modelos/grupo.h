@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <string>
-#include <iostream>
 #include "equipo.h"
 #include "partido.h"
 
@@ -12,17 +11,21 @@ public:
     Grupo(const std::string& nombre);
 
     bool agregarEquipo(Equipo* equipo);
-    void listarEquipos() const;
+    std::vector<std::string> listarEquipos() const;
+    std::vector<Equipo*> obtenerEquipos() const;
 
     void generarPartidos();  // seran round-robin
-    void listarPartidos() const;
+    bool partidosGeneradosFlag() const;
+    std::vector<std::string> listarPartidos() const;
+    std::vector<Partido*> obtenerPartidosPtr();
 
-    void registrarResultado(int indicePartido, int golesLocal, int golesVisitante);
+    bool registrarResultado(int indicePartido, int golesLocal, int golesVisitante);
     void calcularPuntos();
-    void mostrarTablaPuntos() const;
+    
+    std::vector< std::pair<std::string,int> > obtenerTablaPuntos() const;
+    std::vector<Equipo*> obtenerEquiposOrdenadosPorPuntos() const;
 
-    std::vector<Equipo*> getEquipos() const;
-    std::vector<Partido*> getPartidosPtr();
+    std::string getNombre() const;
 
 private:
     std::string nombre;   //podrian ser numeros, pero creo que es mejor "grupo A, grupo B, etc."
