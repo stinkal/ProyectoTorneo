@@ -10,7 +10,7 @@ Arbol::~Arbol() {
     raiz = nullptr;
 }
 NodoArbol* Arbol::getRaiz() const { return raiz; }
-void Arbol::destruirRec(NodoArbol* nodo) {
+void Arbol::destruirRec(NodoArbol* nodo) {   //  cuidado que no encole punteros en ningun otro lado pq aqui los destruyan
     if (!nodo) return;
     if (nodo->izquierda) destruirRec(nodo->izquierda);
     if (nodo->derecha) destruirRec(nodo->derecha);

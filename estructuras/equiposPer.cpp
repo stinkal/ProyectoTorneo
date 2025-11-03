@@ -1,5 +1,5 @@
-#include "equiposper.h"
-// #include "../persistencia/persistencia.h" // uses guardarEquiposJSON / cargarEquiposJSON
+#include "equiposPer.h"
+#include "persistencia.h"
 #include <algorithm>
 
 EquiposPer::EquiposPer(const std::string& filepath_)
@@ -75,8 +75,6 @@ bool EquiposPer::editarEquipo(const std::string& oldName, const std::string& new
 
 bool EquiposPer::eliminarEquipo(const std::string& nombre) {
     if (torneoActivo && torneoActivo->contieneEquipo(nombre)) {
-        std::cout << "No se puede eliminar el equipo " << nombre
-                  << " porque está participando en un torneo activo.\n";
         return false;
     }
 

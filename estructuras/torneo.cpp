@@ -5,7 +5,7 @@
 #include <functional>
 #include <random>
 #include <iomanip>
-#include <json.hpp>
+#include <json.hpp>  //  tener cuidado incluir esto correctamente en el frontend
 using json = nlohmann::json;
 
 bool Torneo::guardarEstado(const std::string& archivo) const {
@@ -29,23 +29,22 @@ bool Torneo::guardarEstado(const std::string& archivo) const {
             grupoJson["equipos"].push_back(e->getNombre());
         }
 
-        // Partidos
-        for (auto& p : g->getPartidos()) {
+        for (auto p : g->getPartidos()) {
+            if (!p) continue;
             grupoJson["partidos"].push_back({
-                {"local", p.getLocal()->getNombre()},
-                {"visitante", p.getVisitante()->getNombre()},
-                {"golesLocal", p.getGolesLocal()},
-                {"golesVisitante", p.getGolesVisitante()},
-                {"jugado", p.estaJugado()}
+                {"local", p->getLocal() ? p->getLocal()->getNombre() : ""},
+                {"visitante", p->getVisitante() ? p->getVisitante()->getNombre() : ""},
+                {"golesLocal", p->getGolesLocal()},
+                {"golesVisitante", p->getGolesVisitante()},
+                {"jugado", p->estaJugado()}
             });
         }
 
         j["grupos"].push_back(grupoJson);
     }
 
-    // Elimination tree
     std::function<json(const NodoArbol*)> guardarNodo = [&](const NodoArbol* nodo) -> json {
-        if (!nodo) return nullptr;
+        if (!nodo) return json(); // null
         json n;
         if (nodo->partido) {
             n["local"] = nodo->partido->getLocal() ? nodo->partido->getLocal()->getNombre() : "";
@@ -53,6 +52,8 @@ bool Torneo::guardarEstado(const std::string& archivo) const {
             n["golesLocal"] = nodo->partido->getGolesLocal();
             n["golesVisitante"] = nodo->partido->getGolesVisitante();
             n["jugado"] = nodo->partido->estaJugado();
+        } else {
+            n = nullptr;
         }
         n["izquierda"] = guardarNodo(nodo->izquierda);
         n["derecha"] = guardarNodo(nodo->derecha);
@@ -61,9 +62,21 @@ bool Torneo::guardarEstado(const std::string& archivo) const {
 
     j["eliminacion"] = guardarNodo(arbolLlaves.raiz);
 
+    if (partidoTercerLugar) {
+        j["tercer_lugar"] = {
+            {"local", partidoTercerLugar->getLocal() ? partidoTercerLugar->getLocal()->getNombre() : ""},
+            {"visitante", partidoTercerLugar->getVisitante() ? partidoTercerLugar->getVisitante()->getNombre() : ""},
+            {"golesLocal", partidoTercerLugar->getGolesLocal()},
+            {"golesVisitante", partidoTercerLugar->getGolesVisitante()},
+            {"jugado", partidoTercerLugar->estaJugado()}
+        };
+    } else {
+        j["tercer_lugar"] = nullptr;
+    }
+
     std::ofstream out(archivo);
     if (!out) return false;
-    out << j.dump(4);  // pretty print with indent = 4
+    out << j.dump(4);  // indentacion 4
     return true;
 }
 
@@ -75,52 +88,124 @@ bool Torneo::cargarEstado(const std::string& archivo) {
     in >> j;
 
     limpiarGrupos();
+    while (!calendario.vacia()) {
+        try { calendario.desencolar(); } catch(...) { break; }
+    }
+    partidosEncolados.clear();
+    for (auto e : equipos) delete e;
     equipos.clear();
+    if (partidoTercerLugar) { delete partidoTercerLugar; partidoTercerLugar = nullptr; }
+    // limpiar arbol
+    arbolLlaves = Arbol(); 
 
-    modalidadGrupo = j["modalidadGrupo"];
+    modalidadGrupo = j.value("modalidadGrupo", true);
 
-    // Equipos
-    for (auto& eJson : j["equipos"]) {
-        Equipo* e = new Equipo(eJson["nombre"]);
-        e->setPuntos(eJson["puntos"]);
-        equipos.push_back(e);
-    }
-
-    // Grupos
-    for (auto& gJson : j["grupos"]) {
-        Grupo* g = new Grupo(gJson["nombre"]);
-        for (auto& en : gJson["equipos"]) {
-            auto it = std::find_if(equipos.begin(), equipos.end(),
-                [&](Equipo* e){ return e->getNombre() == en; });
-            if (it != equipos.end()) g->agregarEquipo(*it);
+    // equipos
+    if (j.contains("equipos") && j["equipos"].is_array()) {
+        for (auto& eJson : j["equipos"]) {
+            std::string name = eJson.value("nombre", std::string());
+            Equipo* e = new Equipo(name);
+            e->setPuntos(eJson.value("puntos", 0));
+            equipos.push_back(e);
         }
-        grupos.push_back(g);
     }
 
-    // Elimination Tree (recursively)
-    std::function<NodoArbol*(const json&)> cargarNodo = [&](const json& n) -> NodoArbol* {
-        if (n.is_null()) return nullptr;
-        NodoArbol* nodo = new NodoArbol();
-
-        if (n.contains("local") && n["local"] != "" && n.contains("visitante") && n["visitante"] != "") {
-            Equipo* local = nullptr;
-            Equipo* visitante = nullptr;
-
-            for (auto e : equipos) {
-                if (e->getNombre() == n["local"]) local = e;
-                if (e->getNombre() == n["visitante"]) visitante = e;
+    if (j.contains("grupos") && j["grupos"].is_array()) {
+        for (auto& gJson : j["grupos"]) {
+            Grupo* g = new Grupo(gJson.value("nombre", std::string("")));
+            if (gJson.contains("equipos") && gJson["equipos"].is_array()) {
+                for (auto& en : gJson["equipos"]) {
+                    std::string ename = en.get<std::string>();
+                    auto it = std::find_if(equipos.begin(), equipos.end(),
+                        [&](Equipo* e){ return e->getNombre() == ename; });
+                    if (it != equipos.end()) g->agregarEquipo(*it);
+                }
             }
-
-            nodo->partido = new Partido(local, visitante);
-            nodo->partido->registrarResultado(n["golesLocal"], n["golesVisitante"]);
+            if (gJson.contains("partidos") && gJson["partidos"].is_array()) {
+                for (auto& pJson : gJson["partidos"]) {
+                    std::string localName = pJson.value("local", std::string());
+                    std::string visitName = pJson.value("visitante", std::string());
+                    Equipo* local = nullptr;
+                    Equipo* visit = nullptr;
+                    for (auto e : equipos) {
+                        if (e->getNombre() == localName) local = e;
+                        if (e->getNombre() == visitName) visit = e;
+                    }
+                    if (local && visit) {
+                        Partido* p = new Partido(local, visit);
+                        if (pJson.value("jugado", false)) {
+                            p->registrarResultado(pJson.value("golesLocal", 0),
+                                                  pJson.value("golesVisitante", 0));
+                        }
+                        g->agregarPartido(p);
+                    }
+                }
+            }
+            grupos.push_back(g);
         }
+    }
 
-        nodo->izquierda = cargarNodo(n["izquierda"]);
-        nodo->derecha = cargarNodo(n["derecha"]);
-        return nodo;
-    };
+    if (j.contains("eliminacion")) {
+        std::function<NodoArbol*(const json&)> cargarNodo = [&](const json& n) -> NodoArbol* {
+            if (n.is_null()) return nullptr;
+            NodoArbol* nodo = new NodoArbol();
+            if (n.contains("local") && n.contains("visitante") && n["local"] != "" && n["visitante"] != "") {
+                Equipo* local = nullptr;
+                Equipo* visitante = nullptr;
+                for (auto e : equipos) {
+                    if (e->getNombre() == n["local"].get<std::string>()) local = e;
+                    if (e->getNombre() == n["visitante"].get<std::string>()) visitante = e;
+                }
+                nodo->partido = new Partido(local, visitante);
+                if (n.value("jugado", false)) {
+                    nodo->partido->registrarResultado(n.value("golesLocal", 0), n.value("golesVisitante", 0));
+                }
+            }
+            nodo->izquierda = cargarNodo(n["izquierda"]);
+            nodo->derecha = cargarNodo(n["derecha"]);
+            return nodo;
+        };
+        arbolLlaves.raiz = cargarNodo(j["eliminacion"]);
+    } else {
+        arbolLlaves.raiz = nullptr;
+    }
 
-    arbolLlaves.raiz = cargarNodo(j["eliminacion"]);
+    if (j.contains("tercer_lugar") && !j["tercer_lugar"].is_null()) {
+        auto t = j["tercer_lugar"];
+        std::string localName = t.value("local", std::string());
+        std::string visitName = t.value("visitante", std::string());
+        Equipo* local = nullptr;
+        Equipo* visit = nullptr;
+        for (auto e : equipos) {
+            if (e->getNombre() == localName) local = e;
+            if (e->getNombre() == visitName) visit = e;
+        }
+        if (local && visit) {
+            partidoTercerLugar = new Partido(local, visit);
+            if (t.value("jugado", false)) {
+                partidoTercerLugar->registrarResultado(t.value("golesLocal", 0),
+                                                      t.value("golesVisitante", 0));
+            }
+        } else {
+            partidoTercerLugar = nullptr;
+        }
+    } else {
+        partidoTercerLugar = nullptr;
+    }
+// limpia calendario y lo genera de nuevo
+    while (!calendario.vacia()) {
+        try { calendario.desencolar(); } catch(...) { break; }
+    }
+    partidosEncolados.clear();
+
+    for (auto g : grupos) {  //  encolar grupos
+        for (auto p : g->getPartidos()) {
+            if (p && partidosEncolados.insert(p).second) calendario.encolar(p);
+        }
+    }
+
+    arbolLlaves.jugar(arbolLlaves.getRaiz());
+    encolarPartidosArbol();
 
     return true;
 }
@@ -133,24 +218,19 @@ bool Torneo::esPartidoDeEliminatoria(Partido* p) const {
     return arbolLlaves.contienePartido(p);
 }
 Torneo::~Torneo() {
-    // Clear the queue so it doesn't hold pointers into group's partido vectors or arbol-owned partidos.
     try {
         while (!calendario.vacia()) {
-            calendario.desencolar(); // do not delete Partido* here (owners will delete)
+            calendario.desencolar(); // cuidado no borrar punteros aqui porque pertenecen a Arbol
         }
     } catch (...) {
-        // ignore in destructor
     }
 
-    // Delete groups (they contain partidos by value)
-    for (auto g : grupos) delete g;
+    for (auto g : grupos) delete g;  //  grupos contienen partidos por puntero, no por valor
     grupos.clear();
 
-    // Delete equipos
     for (auto e : equipos) delete e;
     equipos.clear();
 
-    // Clear enqueued set
     partidosEncolados.clear();
 }
 
@@ -159,7 +239,7 @@ bool Torneo::agregarEquipo(Equipo* e) {
     if (!e) return false;
     if (e->getNombre().empty()) return false;
     for (auto ex : equipos) {
-        if (ex->getNombre() == e->getNombre()) return false; // duplicate
+        if (ex->getNombre() == e->getNombre()) return false; // duplicar
     }
     equipos.push_back(e);
     return true;
@@ -199,15 +279,14 @@ bool Torneo::esModalidadGrupo() const {
     return modalidadGrupo;
 }
 
-// -------------------- Grupos (auto-generation) --------------------
+// -------------------- Grupos auto--------------------
 void Torneo::limpiarGrupos() {
     for (auto g : grupos) delete g;
     grupos.clear();
 }
 
 void Torneo::generarGruposAutomatico() {
-    // Delete any existing groups (but do not delete equipos)
-    limpiarGrupos();
+    limpiarGrupos();  //  borrar grupos existentes 
 
     if (equipos.empty()) return;
 
@@ -228,14 +307,18 @@ void Torneo::generarGruposAutomatico() {
     }
 }
 
-void Torneo::generarCalendarioGrupos() {
-    // For each group: generate matches and enqueue pointers to those matches
-    for (auto g : grupos) {
-        g->generarPartidos();
-        auto partidosPtr = g->obtenerPartidosPtr(); // Grupo provides pointers to its partidos
+void Torneo::generarCalendarioGrupos() {  //  NO PERMITIR el GUI hacer esto si ya lo ha hecho
+    while (!calendario.vacia()) {
+        try { calendario.desencolar(); } catch(...) { break; }
+    }
+    partidosEncolados.clear();
+
+    for (auto g : grupos) {  //  encola punteros a partidos
+        if (!g->partidosGeneradosFlag()) g->generarPartidos();
+
+        auto partidosPtr = g->obtenerPartidosPtr();
         for (auto p : partidosPtr) {
-            // Only enqueue if not already enqueued (defensive)
-            if (partidosEncolados.insert(p).second) {
+            if (p && partidosEncolados.insert(p).second) {
                 calendario.encolar(p);
             }
         }
@@ -247,15 +330,12 @@ bool Torneo::colaVacia() const { return calendario.vacia(); }
 int Torneo::colaTamano() const { return calendario.tamano(); }
 
 Partido* Torneo::jugarPartidoSiguiente() {
-    if (calendario.vacia()) return nullptr;
-    // Dequeue and return the partido; caller (GUI) should call registrarResultado on it.
+    if (calendario.vacia()) return nullptr;  //  GUI necesita llamar registrarResultado !!!
     Partido* siguiente = calendario.desencolar();
-    // note: partido remains considered "enqueued" in our set even after dequeuing - we keep it to avoid re-enqueue later
     return siguiente;
 }
-void Torneo::generarTercerLugar() {
-    // Ensure the knockout tree exists and has semifinals
-    if (!arbolLlaves.raiz || !arbolLlaves.raiz->izquierda || !arbolLlaves.raiz->derecha)
+void Torneo::generarTercerLugar() { 
+    if (!arbolLlaves.raiz || !arbolLlaves.raiz->izquierda || !arbolLlaves.raiz->derecha)  //  asegura que arbol existente tiene semifinales
         return;
 
     NodoArbol* semi1 = arbolLlaves.raiz->izquierda;
@@ -273,17 +353,15 @@ void Torneo::generarTercerLugar() {
         partidoTercerLugar = nullptr;
 }
 
-// -------------------- Centralized result registration --------------------
+// -------------------- registro de resultados --------------------
 bool Torneo::registrarResultadoEnPartido(Partido* p, int gL, int gV, bool esEliminatoria) {
     if (!p) return false;    
     if (!esEliminatoria) esEliminatoria = esPartidoDeEliminatoria(p);
     if (esEliminatoria && gL == gV) return false;
 
-    // Register result
     p->registrarResultado(gL, gV);
 
-    // If this partido belongs to a group, recalculate that group's points
-    for (auto g : grupos) {
+    for (auto g : grupos) {  //  si el partido pertenece a un grupo, calcula puntos de ese grupo
         auto ptrs = g->obtenerPartidosPtr();
         if (std::find(ptrs.begin(), ptrs.end(), p) != ptrs.end()) {
             g->calcularPuntos();
@@ -291,21 +369,19 @@ bool Torneo::registrarResultadoEnPartido(Partido* p, int gL, int gV, bool esElim
         }
     }
 
-    // If elimination match, propagate winners and enqueue newly-ready matches
-    if (esEliminatoria) {
-        arbolLlaves.jugar(arbolLlaves.getRaiz());          // propagate winners, create parent Partido* where possible
-        encolarPartidosArbol();                     // enqueue any new elimination matches
+    if (esEliminatoria) {  //  encola partidos siguientes cuando hay ganador en arbol eliminatorio
+        arbolLlaves.jugar(arbolLlaves.getRaiz());       
+        encolarPartidosArbol();                     
     }
 
     return true;
 }
 
-// -------------------- Reportes / resumen de grupos --------------------     DOUBLE CHECK WITH DEEP THINKING
+// -------------------- Reportes / resumen de grupos --------------------    
 std::vector<std::string> Torneo::obtenerResumenGrupos() const {
     std::vector<std::string> resumen;
     for (auto g : grupos) {
-        // Ensure points are computed
-        const_cast<Grupo*>(g)->calcularPuntos();
+        const_cast<Grupo*>(g)->calcularPuntos();  //  revisa que puntos estan calculados
 
         std::ostringstream ss;
         ss << g->getNombre() << ":";
@@ -327,7 +403,7 @@ std::string Torneo::generarReporteTexto() const {
     out << "Modalidad: " << (modalidadGrupo ? "Grupos + Eliminación" : "Eliminación directa") << "\n";
     out << "Equipos participantes: " << equipos.size() << "\n\n";
 
-    // Campeón, subcampeón, tercer lugar
+    // campeón, subcampeón, tercer lugar
     Equipo* campeon = arbolLlaves.obtenerCampeon();
     Equipo* subcampeon = arbolLlaves.obtenerSubcampeon();   // TODO
     Equipo* tercero = nullptr;
@@ -343,8 +419,7 @@ std::string Torneo::generarReporteTexto() const {
     if (tercero) out << "Tercer lugar: " << tercero->getNombre() << "\n";
     out << "\n";
 
-    // Group tables
-    if (modalidadGrupo && !grupos.empty()) {
+    if (modalidadGrupo && !grupos.empty()) {  //  grupos
         out << "===== TABLAS DE GRUPOS =====\n";
         for (auto g : grupos) {
             out << "Grupo " << g->getNombre() << "\n";
@@ -356,9 +431,8 @@ std::string Torneo::generarReporteTexto() const {
         }
     }
 
-    // Bracket
-    out << "===== FASE DE ELIMINACIÓN =====\n";
-    out << arbolLlaves.getTextoEstructura(); // Return a string representing the tree (see below)
+    out << "===== FASE DE ELIMINACIÓN =====\n";   //  fase eliminatoria
+    out << arbolLlaves.getTextoEstructura(); 
     out << "\n===== FIN DEL REPORTE =====\n";
 
     return out.str();
@@ -385,11 +459,9 @@ bool Torneo::generarLlavesDesdeGrupos() {
     auto clasificados = getClasificados();
     if (clasificados.empty()) return false;
 
-    // Shuffle qualifiers for random placement in bracket
-    std::shuffle(clasificados.begin(), clasificados.end(), rng);
+    std::shuffle(clasificados.begin(), clasificados.end(), rng);  //  calificados colocados aleatoriamente
 
-    if (!esPotenciaDe2(static_cast<int>(clasificados.size()))) {
-        // Not a power of two: GUI must resolve (byes or manual selection)
+    if (!esPotenciaDe2(static_cast<int>(clasificados.size()))) {  //  NECESITA RESOLVER EN EL GUI
         return false;
     }
 
@@ -400,26 +472,20 @@ bool Torneo::generarLlavesDirectas(const std::vector<Equipo*>& equiposClasificad
     if (equiposClasificados.empty()) return false;
     if (!esPotenciaDe2(static_cast<int>(equiposClasificados.size()))) return false;
 
-    // Build arbol; Arbol will create and own Partido* for elimination matches.
-    arbolLlaves.construir(equiposClasificados);
+    arbolLlaves.construir(equiposClasificados);  //  construye arbol
 
-    // Propagate winners (this will create parent Partido* where both child winners exist)
     arbolLlaves.jugar(arbolLlaves.getRaiz());
 
-    // Enqueue first-round matches (leaves) into the calendario
-    encolarPartidosArbol();
+    encolarPartidosArbol();  //  encolar primer ronda de partidos
     return true;
 }
 
-// -------------------- Enqueue helper for arbol matches --------------------
 void Torneo::encolarPartidosArbol() {
-    // post-order traversal so leaves (first round) are seen before parents
-    std::function<void(NodoArbol*)> post = [&](NodoArbol* n) {
+    std::function<void(NodoArbol*)> post = [&](NodoArbol* n) {  //  para encolar hojas primero, y luego padres cuando hay ganador
         if (!n) return;
         post(n->izquierda);
         post(n->derecha);
         if (n->partido && !n->partido->estaJugado()) {
-            // enqueue only if not already enqueued
             if (partidosEncolados.insert(n->partido).second) {
                 calendario.encolar(n->partido);
             }
@@ -429,15 +495,13 @@ void Torneo::encolarPartidosArbol() {
     post(arbolLlaves.getRaiz());
 }
 
-// Returns next unplayed elimination match (Partido*) or nullptr if none
-Partido* Torneo::jugarLlaveSiguiente() {
+Partido* Torneo::jugarLlaveSiguiente() {  //  tira el siguiente partido pendienet
     NodoArbol* nodo = arbolLlaves.buscarPrimerPartidoNoJugado();
     if (!nodo) return nullptr;
     return nodo->partido;
 }
 
-// Simple traversal to collect all matches with summaries (in-order-like)
-std::vector<std::string> Torneo::obtenerBracket() const {
+std::vector<std::string> Torneo::obtenerBracket() const {  //  resumenes in-order
     std::vector<std::string> lines;
     std::function<void(NodoArbol*)> dfs = [&](NodoArbol* n) {
         if (!n) return;
