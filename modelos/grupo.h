@@ -26,6 +26,8 @@ public:
     std::vector<Equipo*> obtenerEquiposOrdenadosPorPuntos() const;
 
     std::string getNombre() const;
+    const std::vector<Equipo*>& getEquipos() const { return equipos; }
+    const std::vector<Partido>& getPartidos() const { return partidos; }
 
 private:
     std::string nombre;   //podrian ser numeros, pero creo que es mejor "grupo A, grupo B, etc."

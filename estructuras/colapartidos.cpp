@@ -1,4 +1,5 @@
-#include "estructuras/colapartidos.h"
+#include "colapartidos.h"
+using namespace std;
 
 // constructor del nodo
 NodoCola::NodoCola(Partido* p) : partido(p), siguiente(nullptr) {}

@@ -4,6 +4,7 @@
 #include "../modelos/partido.h"
 #include "../modelos/equipo.h"
 #include <vector>
+#include <string>
 
 struct NodoArbol {
     Partido* partido;
@@ -23,8 +24,14 @@ public:
     NodoArbol* buscarPrimerPartidoNoJugado() const;
     void jugar(NodoArbol* nodo);
     Equipo* obtenerCampeon() const;
-    void mostrar(NodoArbol* nodo, int nivel = 0) const;
-    std::vector<Partido*> obtenderPartidosPendientes() const;
+    void mostrar(std::ostream& out, NodoArbol* nodo, int nivel = 0) const;
+    std::vector<Partido*> obtenerPartidosPendientes() const;
+    NodoArbol* getRaiz() const;
+    bool contienePartido(Partido* p) const;
+    Equipo* obtenerPerdedor(Partido* p) const;
+    std::string getTextoEstructura() const;
+    Equipo* obtenerSubcampeon() const;
+
 
 private:
     static NodoArbol* construirRec(const std::vector<Equipo*>& equipos, int inicio, int fin);

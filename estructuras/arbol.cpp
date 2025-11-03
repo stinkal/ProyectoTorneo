@@ -1,5 +1,6 @@
 #include "arbol.h"
-#include <iostream>
+#include <sstream>
+#include <string>
 #include <functional>
 using namespace std;
 
@@ -8,7 +9,7 @@ Arbol::~Arbol() {
     destruirRec(raiz);
     raiz = nullptr;
 }
-
+NodoArbol* Arbol::getRaiz() const { return raiz; }
 void Arbol::destruirRec(NodoArbol* nodo) {
     if (!nodo) return;
     if (nodo->izquierda) destruirRec(nodo->izquierda);
@@ -34,7 +35,7 @@ NodoArbol* Arbol::buscarPrimerPartidoNoJugado() const {
     return buscarPrimerNoJugadoRec(raiz);
 }
 
-vector<Partido*> Arbol::obtenderPartidosPendientes() const {
+vector<Partido*> Arbol::obtenerPartidosPendientes() const {
     vector<Partido*> pendientes;
     function<void(NodoArbol*)> dfs = [&](NodoArbol* n) {
         if (!n) return;
@@ -79,6 +80,24 @@ Equipo* Arbol::determinarGanador(Partido* partido) const {
         return nullptr; // empate
 }
 
+std::string Arbol::getTextoEstructura() const {
+    std::ostringstream out;
+    std::function<void(const NodoArbol*, int)> rec = [&](const NodoArbol* nodo, int nivel) {
+        if (!nodo) return;
+        rec(nodo->derecha, nivel + 1);
+        out << std::string(nivel * 6, ' ');
+        if (nodo->partido && nodo->partido->getLocal() && nodo->partido->getVisitante())
+            out << nodo->partido->getLocal()->getNombre() << " vs "
+                << nodo->partido->getVisitante()->getNombre();
+        else
+            out << "(pendiente)";
+        out << "\n";
+        rec(nodo->izquierda, nivel + 1);
+    };
+    rec(raiz, 0);
+    return out.str();
+}
+
 void Arbol::jugar(NodoArbol* nodo) {
     if (!nodo) return;
 
@@ -99,18 +118,42 @@ Equipo* Arbol::obtenerCampeon() const {
     return determinarGanador(raiz->partido);
 }
 
-void Arbol::mostrar(NodoArbol* nodo, int nivel) const {
+Equipo* Arbol::obtenerSubcampeon() const {
+    if (!raiz || !raiz->partido) return nullptr;
+    Equipo* ganador = obtenerCampeon();
+    Equipo* local = raiz->partido->getLocal();
+    Equipo* visitante = raiz->partido->getVisitante();
+    if (ganador == local) return visitante;
+    if (ganador == visitante) return local;
+    return nullptr;
+}
+
+void Arbol::mostrar(std::ostream& out, NodoArbol* nodo, int nivel) const {
     if (!nodo) return;
+    mostrar(out, nodo->derecha, nivel + 1);
+    out << std::string(nivel * 6, ' ');
+    if (nodo->partido && nodo->partido->getLocal() && nodo->partido->getVisitante())
+        out << nodo->partido->getLocal()->getNombre() << " vs "
+            << nodo->partido->getVisitante()->getNombre();
+    else
+        out << "(pendiente)";
+    out << "\n";
+    mostrar(out, nodo->izquierda, nivel + 1);
+}
 
-    mostrar(nodo->derecha, nivel + 1);
 
-    cout << string(nivel * 6, ' ');
-    if (nodo->partido) {
-        cout << nodo->partido->getResumen();
-    } else {
-        cout << "(pendiente)";
-    }
-    cout << endl;
+Equipo* Arbol::obtenerPerdedor(Partido* p) const {
+    if (!p || !p->estaJugado()) return nullptr;
+    if (p->getGolesLocal() > p->getGolesVisitante()) return p->getVisitante();
+    return p->getLocal();
+}
 
-    mostrar(nodo->izquierda, nivel + 1);
+static bool contieneRec(NodoArbol* nodo, Partido* p) {
+    if (!nodo) return false;
+    if (nodo->partido == p) return true;
+    return contieneRec(nodo->izquierda, p) || contieneRec(nodo->derecha, p);
+}
+
+bool Arbol::contienePartido(Partido* p) const {
+    return contieneRec(raiz, p);
 }

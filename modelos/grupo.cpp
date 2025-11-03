@@ -1,6 +1,6 @@
 #include "grupo.h"
 #include <algorithm>
-#include <iomanip>
+#include <random>
 #include <sstream>
 
 Grupo::Grupo(const std::string& nombre)
@@ -40,11 +40,20 @@ void Grupo::generarPartidos() {
         return;
     }
 
-    for (size_t i = 0; i < equipos.size(); ++i) {
-        for (size_t j = i + 1; j < equipos.size(); ++j) {
-            partidos.emplace_back(equipos[i], equipos[j]);
+    std::vector<Equipo*> pool = equipos; //   copia punteros de los equipos
+
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(pool.begin(), pool.end(), g); //   reordenar de manera aleatoria
+
+    for (size_t i = 0; i < pool.size(); ++i) {
+        for (size_t j = i + 1; j < pool.size(); ++j) {
+            partidos.emplace_back(pool[i], pool[j]);
         }
     }
+
+    std::shuffle(partidos.begin(), partidos.end(), g);
+
     partidosGenerados = true;
 }
 
