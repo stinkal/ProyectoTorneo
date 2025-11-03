@@ -6,6 +6,13 @@
 Grupo::Grupo(const std::string& nombre)
     : nombre(nombre), partidosGenerados(false) {}
 
+Grupo::~Grupo() {
+    for (auto p : partidos) {
+        delete p;
+    }
+    partidos.clear();
+}
+
 bool Grupo::agregarEquipo(Equipo* equipo) {
     if (!equipo) return false;
     if (equipos.size() >= 4) {
@@ -34,21 +41,22 @@ std::vector<Equipo*> Grupo::obtenerEquipos() const {
 }
 
 void Grupo::generarPartidos() {
+    for (auto p : partidos) delete p;
     partidos.clear();
+
     if (equipos.size() < 2) {
         partidosGenerados = false;
         return;
     }
 
-    std::vector<Equipo*> pool = equipos; //   copia punteros de los equipos
-
+    std::vector<Equipo*> pool = equipos;
     std::random_device rd;
     std::mt19937 g(rd());
-    std::shuffle(pool.begin(), pool.end(), g); //   reordenar de manera aleatoria
+    std::shuffle(pool.begin(), pool.end(), g);
 
     for (size_t i = 0; i < pool.size(); ++i) {
         for (size_t j = i + 1; j < pool.size(); ++j) {
-            partidos.emplace_back(pool[i], pool[j]);
+            partidos.push_back(new Partido(pool[i], pool[j]));
         }
     }
 
@@ -67,25 +75,23 @@ std::vector<std::string> Grupo::listarPartidos() const {
     out.reserve(partidos.size());
     for (size_t i = 0; i < partidos.size(); ++i) {
         std::ostringstream ss;
-        ss << (i + 1) << ") " << partidos[i].getResumen();
+        ss << (i + 1) << ") " << partidos[i]->getResumen(); // -> because Partido*
         out.push_back(ss.str());
     }
     return out;
 }
 
 std::vector<Partido*> Grupo::obtenerPartidosPtr() {
-    std::vector<Partido*> ptrs;
-    ptrs.reserve(partidos.size());
-    for (auto &p : partidos) ptrs.push_back(&p);
-    return ptrs;
+    return partidos;
 }
 
 bool Grupo::registrarResultado(int indicePartido, int golesLocal, int golesVisitante) {
     if (indicePartido < 1 || indicePartido > static_cast<int>(partidos.size())) {
         return false;
     }
-    Partido& p = partidos[indicePartido - 1];
-    p.registrarResultado(golesLocal, golesVisitante);
+    Partido* p = partidos[indicePartido - 1]; // puntero
+    if (!p) return false;
+    p->registrarResultado(golesLocal, golesVisitante);
     return true;
 }
 
@@ -94,14 +100,16 @@ void Grupo::calcularPuntos() {
         e->setPuntos(0);
     }
 
+    for (auto p : partidos) {
+        if (!p) continue;
+        if (!p->estaJugado()) continue;
 
-    for (auto& p : partidos) {
-        if (!p.estaJugado()) continue;
+        int gL = p->getGolesLocal();
+        int gV = p->getGolesVisitante();
+        Equipo* local = p->getLocal();
+        Equipo* visitante = p->getVisitante();
 
-        int gL = p.getGolesLocal();
-        int gV = p.getGolesVisitante();
-        Equipo* local = p.getLocal();
-        Equipo* visitante = p.getVisitante();
+        if (!local || !visitante) continue;
 
         if (gL > gV) {
             local->sumarPuntos(3);
@@ -124,7 +132,7 @@ std::vector< std::pair<std::string,int> > Grupo::obtenerTablaPuntos() const {
     std::sort(table.begin(), table.end(),
               [](const std::pair<std::string,int>& a, const std::pair<std::string,int>& b) {
                   if (a.second != b.second) return a.second > b.second;
-                  return a.first < b.first; 
+                  return a.first < b.first;
               });
     return table;
 }
@@ -142,4 +150,9 @@ std::vector<Equipo*> Grupo::obtenerEquiposOrdenadosPorPuntos() const {
 
 std::string Grupo::getNombre() const {
     return nombre;
+}
+void Grupo::agregarPartido(Partido* p) {
+    if (!p) return;
+    partidos.push_back(p);
+    partidosGenerados = true;
 }
