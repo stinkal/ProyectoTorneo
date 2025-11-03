@@ -12,9 +12,3 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-
-void MainWindow::on_generateButton_clicked()
-{
-    // aqui luego llamamos Grupo::generarPartidos() y actualizar partidosTable
-}
-
