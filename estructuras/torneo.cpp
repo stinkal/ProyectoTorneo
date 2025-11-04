@@ -235,9 +235,6 @@ Torneo::~Torneo() {
 }
 
 bool Torneo::estaActivo() const {
-    // Si hay grupos creados y con equipos -> consideramos el torneo configurado/activo
-    if (!grupos.empty()) return true;
-
     // Si hay partidos en la cola (calendario), entonces el torneo está en curso
     if (!calendario.vacia()) return true;
 
