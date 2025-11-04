@@ -56,6 +56,7 @@ public:
     bool esPartidoDeEliminatoria(Partido* p) const;
 
     bool contieneEquipo(const std::string& nombre) const;
+    bool estaActivo() const;
     std::string generarReporteTexto() const;
     bool guardarEstado(const std::string& archivo) const;
     bool cargarEstado(const std::string& archivo);

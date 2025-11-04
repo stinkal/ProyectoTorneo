@@ -234,6 +234,22 @@ Torneo::~Torneo() {
     partidosEncolados.clear();
 }
 
+bool Torneo::estaActivo() const {
+    // Si hay grupos creados y con equipos -> consideramos el torneo configurado/activo
+    if (!grupos.empty()) return true;
+
+    // Si hay partidos en la cola (calendario), entonces el torneo está en curso
+    if (!calendario.vacia()) return true;
+
+    // Si existe un arbol de eliminación (raíz no nula), consideramos que está en fase eliminatoria
+    if (arbolLlaves.getRaiz() != nullptr) return true;
+
+    // Si hay un partido para tercer lugar creado, considerarlo activo
+    if (partidoTercerLugar != nullptr) return true;
+
+    return false;
+}
+
 // -------------------- Equipos --------------------
 bool Torneo::agregarEquipo(Equipo* e) {
     if (!e) return false;
