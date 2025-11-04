@@ -36,6 +36,7 @@ Thumbs.db
 /.qmake.stash
 .vscode
 json.hpp
+*.idx
 
 # qtcreator generated files
 *.pro.user*
