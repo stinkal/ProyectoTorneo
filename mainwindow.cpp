@@ -1,73 +1,76 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "ventanaequipos.h"
-#include "ventanacalendario.h"
-#include "estructuras/torneo.h"
-#include "ventanagrupos.h"
-#include <QMessageBox>
 
+#include <QMessageBox>
+#include <QFileDialog>
+
+#include "estructuras/torneo.h"
+#include "ventanaequipos.h"
+#include "ventanagrupos.h"
+#include "ventanacalendario.h"
+#include "ventanatorneo.h"
+#include "ventanareportes.h"
+#include "ventanaarbol.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    : QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    torneo(new Torneo)
 {
     ui->setupUi(this);
 
-    // Connect buttons to slots
-    connect(ui->btnEquipos, &QPushButton::clicked, this, &MainWindow::onEquiposClicked);
-    connect(ui->btnCalendario, &QPushButton::clicked, this, &MainWindow::onCalendarioClicked);
-    connect(ui->btnGrupos, &QPushButton::clicked, this, &MainWindow::onGruposClicked);
-    connect(ui->btnBracket, &QPushButton::clicked, this, &MainWindow::onBracketClicked);
-    connect(ui->btnTorneo, &QPushButton::clicked, this, &MainWindow::onTorneoClicked);
-    connect(ui->btnReportes, &QPushButton::clicked, this, &MainWindow::onReportesClicked);
+    // Connect the six visible buttons
+   /* connect(ui->btnEquipos,    &QPushButton::clicked, this, &MainWindow::on_btnEquipos_clicked);
+    connect(ui->btnGrupos,     &QPushButton::clicked, this, &MainWindow::on_btnGrupos_clicked);
+    connect(ui->btnCalendario, &QPushButton::clicked, this, &MainWindow::on_btnCalendario_clicked);
+    connect(ui->btnTorneo,     &QPushButton::clicked, this, &MainWindow::on_btnTorneo_clicked);
+    connect(ui->btnBracket,    &QPushButton::clicked, this, &MainWindow::on_btnBracket_clicked);
+    connect(ui->btnReportes,   &QPushButton::clicked, this, &MainWindow::on_btnReportes_clicked); */
 }
 
 MainWindow::~MainWindow()
 {
+    if (torneo) {
+        torneo->guardarEstado("autosave.json");
+        delete torneo;
+    }
     delete ui;
 }
 
-// Placeholder slots
-void MainWindow::onEquiposClicked() {
-    // pass the persistent MainWindow::torneo member into the dialog
-    VentanaEquipos ventana(&torneo, this);
-    ventana.exec();
-}
-void MainWindow::onCalendarioClicked()
+// === Button slot implementations ===
+
+void MainWindow::on_btnEquipos_clicked()
 {
-    // MainWindow tiene un miembro Torneo torneo; pasamos su dirección
-    VentanaCalendario ventana(&torneo, this);
-    ventana.exec();
+    VentanaEquipos dlg(torneo, this);
+    dlg.exec();
 }
-void MainWindow::onGruposClicked()
+
+void MainWindow::on_btnGrupos_clicked()
 {
-    // Crea el diálogo de gestión de grupos, pasando el torneo actual
-    VentanaGrupos dlg(&torneo, this);
-
-    // Ejecuta la ventana de forma modal (bloquea hasta que el usuario cierre)
-    if (dlg.exec() == QDialog::Accepted) {
-        // El usuario presionó “Aceptar”, así que obtenemos los grupos creados
-        auto grupos = dlg.getGrupos();  // vector<vector<string>>
-
-        // Por ahora, solo mostramos un resumen como prueba
-        QString resumen = "Grupos creados:\n";
-        int i = 1;
-        for (const auto& g : grupos) {
-            resumen += QString("Grupo %1: ").arg(i++);
-            for (size_t j = 0; j < g.size(); ++j) {
-                resumen += QString::fromStdString(g[j]);
-                if (j + 1 < g.size()) resumen += ", ";
-            }
-            resumen += "\n";
-        }
-
-        QMessageBox::information(this, "Resumen de grupos", resumen);
-    }
-    else {
-        // El usuario canceló, no hacemos nada
-        QMessageBox::information(this, "Cancelado", "No se aplicaron cambios en los grupos.");
-    }
+    VentanaGrupos dlg(torneo, this);
+    dlg.exec();
 }
-void MainWindow::onBracketClicked()     { QMessageBox::information(this, "Bracket", "Bracket window coming soon!"); }
-void MainWindow::onTorneoClicked()      { QMessageBox::information(this, "Torneo", "Torneo creation coming soon!"); }
-void MainWindow::onReportesClicked()    { QMessageBox::information(this, "Reportes", "Report window coming soon!"); }
+
+void MainWindow::on_btnCalendario_clicked()
+{
+    VentanaCalendario dlg(torneo, this);
+    dlg.exec();
+}
+
+void MainWindow::on_btnTorneo_clicked()
+{
+    VentanaTorneo dlg(torneo, this);
+    dlg.exec();
+}
+
+void MainWindow::on_btnBracket_clicked()
+{
+    VentanaArbol dlg(torneo, this);
+    dlg.exec();
+}
+
+void MainWindow::on_btnReportes_clicked()
+{
+    VentanaReportes dlg(torneo, this);
+    dlg.exec();
+}

@@ -20,6 +20,10 @@ void Arbol::destruirRec(NodoArbol* nodo) {   //  cuidado que no encole punteros 
     }
     delete nodo;
 }
+void Arbol::clear() {
+    destruirRec(raiz);
+    raiz = nullptr;
+}
 
 static NodoArbol* buscarPrimerNoJugadoRec(NodoArbol* nodo) {
     if (!nodo) return nullptr;

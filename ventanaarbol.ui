@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>VentanaArbol</class>
+ <widget class="QDialog" name="VentanaArbol">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Árbol de Eliminación</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="lblTitulo">
+     <property name="text">
+      <string>Llaves del Torneo:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignHCenter</set>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>12</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextEdit" name="txtArbol">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+     <property name="font">
+      <font>
+       <family>Courier New</family>
+      </font>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btnCerrar">
+     <property name="text">
+      <string>Cerrar</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

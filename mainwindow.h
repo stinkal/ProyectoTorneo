@@ -2,12 +2,11 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "estructuras/torneo.h"
+
+class Torneo;
 
 QT_BEGIN_NAMESPACE
-namespace Ui {
-class MainWindow;
-}
+namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -15,20 +14,20 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+private slots:
+    void on_btnEquipos_clicked();
+    void on_btnGrupos_clicked();
+    void on_btnCalendario_clicked();
+    void on_btnTorneo_clicked();
+    void on_btnBracket_clicked();
+    void on_btnReportes_clicked();
 
 private:
     Ui::MainWindow *ui;
-    Torneo torneo;
-
-private slots:
-    void onEquiposClicked();
-    void onCalendarioClicked();
-    void onGruposClicked();
-    void onBracketClicked();
-    void onTorneoClicked();
-    void onReportesClicked();
+    Torneo *torneo;
 };
 
 #endif // MAINWINDOW_H

@@ -1,110 +1,97 @@
 #include "ventanaequipos.h"
 #include "ui_ventanaequipos.h"
-#include <QMessageBox>
-#include <QInputDialog>
-#include <algorithm> // for std::find
 
-VentanaEquipos::VentanaEquipos(Torneo* torneo, QWidget *parent)
-    : QDialog(parent)
-    , ui(new Ui::VentanaEquipos)
-    , torneoActual(torneo)
+#include <QInputDialog>
+#include <QMessageBox>
+
+#include "estructuras/torneo.h"
+#include "modelos/equipo.h"
+
+VentanaEquipos::VentanaEquipos(Torneo *torneo, QWidget *parent)
+    : QDialog(parent),
+    ui(new Ui::VentanaEquipos),
+    torneo(torneo)
 {
     ui->setupUi(this);
 
-    // Conectar botones a slots
-    connect(ui->btnAgregar, &QPushButton::clicked, this, &VentanaEquipos::alAgregar);
-    connect(ui->btnEditar, &QPushButton::clicked, this, &VentanaEquipos::alEditar);
-    connect(ui->btnEliminar, &QPushButton::clicked, this, &VentanaEquipos::alEliminar);
-    connect(ui->btnActualizar, &QPushButton::clicked, this, &VentanaEquipos::alActualizar);
-
     actualizarLista();
 }
 
-VentanaEquipos::~VentanaEquipos() {
+VentanaEquipos::~VentanaEquipos()
+{
     delete ui;
 }
 
-// Actualiza la lista de equipos mostrada en pantalla
-void VentanaEquipos::actualizarLista() {
+void VentanaEquipos::actualizarLista()
+{
     ui->listaEquipos->clear();
+    if (!torneo) return;
 
-    if (!torneoActual) return;
+    bool activo = torneo->estaActivo();
 
-    auto nombres = torneoActual->getNombresEquipos();
-    for (const auto& nombre : nombres)
+    ui->btnAgregar->setEnabled(!activo);
+    ui->btnEditar->setEnabled(!activo);
+    ui->btnEliminar->setEnabled(!activo);
+
+    for (const std::string &nombre : torneo->getNombresEquipos()) {
         ui->listaEquipos->addItem(QString::fromStdString(nombre));
-}
-
-// Verifica si el equipo está bloqueado por estar en un torneo activo
-bool VentanaEquipos::equipoBloqueado(const std::string&) {
-return torneoActual->estaActivo();
-}
-
-// CRUD ------------------------------------------------------
-
-void VentanaEquipos::alAgregar() {
-    if (!torneoActual) return;
-
-    bool ok;
-    QString nombre = QInputDialog::getText(this, "Agregar equipo",
-                                           "Nombre del equipo:",
-                                           QLineEdit::Normal,
-                                           "", &ok);
-
-    if (ok && !nombre.isEmpty()) {
-        Equipo* nuevo = new Equipo(nombre.toStdString());
-        if (!torneoActual->agregarEquipo(nuevo)) {   // nombre del método depende de tu implementación
-            QMessageBox::warning(this, "Error", "No se pudo agregar el equipo (nombre duplicado o torneo activo).");
-            delete nuevo;
-        }
-        actualizarLista();
     }
 }
 
-void VentanaEquipos::alEditar() {
-    auto item = ui->listaEquipos->currentItem();
-    if (!item) return;
-
-    std::string nombreViejo = item->text().toStdString();
-
-    if (equipoBloqueado(nombreViejo)) {
-        QMessageBox::warning(this, "No permitido", "No puedes editar equipos que ya participan en un torneo activo.");
-        return;
-    }
-
-    bool ok;
-    QString nuevoNombre = QInputDialog::getText(this, "Editar equipo",
-                                                "Nuevo nombre del equipo:",
-                                                QLineEdit::Normal,
-                                                item->text(), &ok);
-
-    if (ok && !nuevoNombre.isEmpty()) {
-        // Ideal: llamar a un método editar en la capa de persistencia (si existe).
-        // Aquí usamos eliminar + agregar para mantenerlo simple:
-        torneoActual->eliminarEquipo(nombreViejo);
-        torneoActual->agregarEquipo(new Equipo(nuevoNombre.toStdString()));
-        actualizarLista();
-    }
-}
-
-void VentanaEquipos::alEliminar() {
-    auto item = ui->listaEquipos->currentItem();
-    if (!item) return;
-
-    std::string nombre = item->text().toStdString();
-
-    if (equipoBloqueado(nombre)) {
-        QMessageBox::warning(this, "No permitido", "No puedes eliminar equipos que ya están en un torneo activo.");
-        return;
-    }
-
-    if (QMessageBox::question(this, "Confirmar eliminación", "¿Deseas eliminar este equipo?")
-        == QMessageBox::Yes) {
-        torneoActual->eliminarEquipo(nombre);
-        actualizarLista();
-    }
-}
-
-void VentanaEquipos::alActualizar() {
+void VentanaEquipos::on_btnActualizar_clicked()
+{
     actualizarLista();
+}
+
+void VentanaEquipos::on_btnAgregar_clicked()
+{
+    bool ok;
+    QString nombre = QInputDialog::getText(this, tr("Agregar equipo"),
+                                           tr("Nombre del equipo:"), QLineEdit::Normal,
+                                           "", &ok);
+    if (!ok || nombre.trimmed().isEmpty()) return;
+
+    Equipo *e = new Equipo(nombre.toStdString());
+    if (!torneo->agregarEquipo(e)) {
+        QMessageBox::warning(this, tr("Error"), tr("El equipo ya existe o el torneo está activo."));
+        delete e;
+        return;
+    }
+
+    actualizarLista();
+}
+
+void VentanaEquipos::on_btnEditar_clicked()
+{
+    QListWidgetItem *item = ui->listaEquipos->currentItem();
+    if (!item) return;
+
+    QString actual = item->text();
+    bool ok;
+    QString nuevo = QInputDialog::getText(this, tr("Editar equipo"),
+                                          tr("Nuevo nombre:"), QLineEdit::Normal,
+                                          actual, &ok);
+    if (!ok || nuevo.trimmed().isEmpty() || nuevo == actual)
+        return;
+
+    torneo->eliminarEquipo(actual.toStdString());
+    Equipo *e = new Equipo(nuevo.toStdString());
+    torneo->agregarEquipo(e);
+
+    actualizarLista();
+}
+
+void VentanaEquipos::on_btnEliminar_clicked()
+{
+    QListWidgetItem *item = ui->listaEquipos->currentItem();
+    if (!item) return;
+
+    QString nombre = item->text();
+    if (QMessageBox::question(this, tr("Eliminar"),
+                              tr("¿Eliminar el equipo \"%1\"?").arg(nombre))
+        == QMessageBox::Yes)
+    {
+        torneo->eliminarEquipo(nombre.toStdString());
+        actualizarLista();
+    }
 }

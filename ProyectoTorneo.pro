@@ -19,9 +19,12 @@ SOURCES += \
     modelos/equipo.cpp \
     modelos/grupo.cpp \
     modelos/partido.cpp \
+    ventanaarbol.cpp \
     ventanacalendario.cpp \
     ventanaequipos.cpp \
-    ventanagrupos.cpp
+    ventanagrupos.cpp \
+    ventanareportes.cpp \
+    ventanatorneo.cpp
 
 HEADERS += \
     estructuras/arbol.h \
@@ -33,15 +36,21 @@ HEADERS += \
     modelos/equipo.h \
     modelos/grupo.h \
     modelos/partido.h \
+    ventanaarbol.h \
     ventanacalendario.h \
     ventanaequipos.h \
-    ventanagrupos.h
+    ventanagrupos.h \
+    ventanareportes.h \
+    ventanatorneo.h
 
 FORMS += \
     mainwindow.ui \
+    ventanaarbol.ui \
     ventanacalendario.ui \
     ventanaequipos.ui \
-    ventanagrupos.ui
+    ventanagrupos.ui \
+    ventanareportes.ui \
+    ventanatorneo.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

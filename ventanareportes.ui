@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>VentanaReportes</class>
+ <widget class="QDialog" name="VentanaReportes">
+  <property name="windowTitle">
+   <string>Reportes</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="lblResumen">
+     <property name="text"><string>Resumen del torneo</string></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTextEdit" name="txtResumen">
+     <property name="readOnly"><bool>true</bool></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabReportes"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="hButtons">
+     <item>
+      <widget class="QPushButton" name="btnExport">
+       <property name="text"><string>Exportar a .txt</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnCerrar">
+       <property name="text"><string>Cerrar</string></property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

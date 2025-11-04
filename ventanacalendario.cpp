@@ -1,145 +1,108 @@
 #include "ventanacalendario.h"
 #include "ui_ventanacalendario.h"
-#include <QMessageBox>
-#include <QInputDialog>
-#include <chrono>
-#include <sstream>
 
-VentanaCalendario::VentanaCalendario(Torneo* torneo, QWidget* parent)
-    : QDialog(parent),
-    ui(new Ui::VentanaCalendario),
-    torneoActual(torneo),
-    rng(static_cast<unsigned>(std::chrono::high_resolution_clock::now().time_since_epoch().count()))
+#include <QMessageBox>
+#include <QRandomGenerator>
+#include <QFormLayout>
+#include <QDialog>
+#include <QSpinBox>
+#include <QPushButton>
+
+#include "estructuras/torneo.h"
+#include "modelos/partido.h"
+#include "modelos/equipo.h"
+
+VentanaCalendario::VentanaCalendario(Torneo *torneo, QWidget *parent) :
+    QDialog(parent), ui(new Ui::VentanaCalendario), torneo(torneo)
 {
     ui->setupUi(this);
-
-    connect(ui->btnActualizar, &QPushButton::clicked, this, &VentanaCalendario::alActualizar);
-    connect(ui->btnJugarSiguiente, &QPushButton::clicked, this, &VentanaCalendario::alJugarSiguiente);
-    connect(ui->btnAutogenerar, &QPushButton::clicked, this, &VentanaCalendario::alAutogenerar);
-    connect(ui->btnCerrar, &QPushButton::clicked, this, &VentanaCalendario::alCerrar);
-
-    mostrarCalendario();
+    refresh();
 }
 
-VentanaCalendario::~VentanaCalendario()
+VentanaCalendario::~VentanaCalendario() { delete ui; }
+
+void VentanaCalendario::refresh()
 {
-    delete ui;
+    ui->listPartidos->clear();
+
+    if (torneo->colaVacia()) {
+        ui->lblStatus->setText(tr("No hay partidos pendientes."));
+        ui->btnPlayNext->setEnabled(false);
+        ui->btnAutoGenerate->setEnabled(false);
+        return;
+    }
+
+    ui->lblStatus->setText(tr("Partidos pendientes: %1").arg(torneo->colaTamano()));
+    ui->btnPlayNext->setEnabled(true);
+    ui->btnAutoGenerate->setEnabled(true);
 }
 
-void VentanaCalendario::mostrarCalendario()
+void VentanaCalendario::on_btnPlayNext_clicked()
 {
-    ui->listaCalendario->clear();
-
-    if (!torneoActual) {
-        ui->listaCalendario->addItem("No hay torneo cargado.");
-        ui->btnJugarSiguiente->setEnabled(false);
-        ui->btnAutogenerar->setEnabled(false);
+    Partido *p = torneo->jugarPartidoSiguiente();
+    if (!p) {
+        QMessageBox::information(this, tr("Sin partidos"), tr("No hay partidos en cola."));
+        refresh();
         return;
     }
 
-    if (torneoActual->colaVacia()) {
-        ui->listaCalendario->addItem("No hay partidos pendientes.");
-        ui->btnJugarSiguiente->setEnabled(false);
-        ui->btnAutogenerar->setEnabled(false);
-        return;
+    QDialog dlg(this);
+    dlg.setWindowTitle(tr("Registrar resultado"));
+    QFormLayout form(&dlg);
+
+    QLabel *lblL = new QLabel(QString::fromStdString(p->getLocal()->getNombre()));
+    QLabel *lblV = new QLabel(QString::fromStdString(p->getVisitante()->getNombre()));
+    QSpinBox *gl = new QSpinBox(); gl->setRange(0, 20);
+    QSpinBox *gv = new QSpinBox(); gv->setRange(0, 20);
+    form.addRow(lblL, gl);
+    form.addRow(lblV, gv);
+
+    QPushButton *ok = new QPushButton(tr("Registrar"));
+    QPushButton *cancel = new QPushButton(tr("Cancelar"));
+    QHBoxLayout *h = new QHBoxLayout();
+    h->addWidget(ok); h->addWidget(cancel);
+    form.addRow(h);
+    connect(ok, &QPushButton::clicked, &dlg, &QDialog::accept);
+    connect(cancel, &QPushButton::clicked, &dlg, &QDialog::reject);
+
+    if (dlg.exec() == QDialog::Accepted) {
+        int golesL = gl->value();
+        int golesV = gv->value();
+
+        bool esElim = torneo->esPartidoDeEliminatoria(p);
+        if (esElim && golesL == golesV) {
+            QMessageBox::warning(this, tr("Error"), tr("No se permiten empates en eliminación."));
+            return;
+        }
+
+        if (!torneo->registrarResultadoEnPartido(p, golesL, golesV, esElim))
+            QMessageBox::warning(this, tr("Error"), tr("No se pudo registrar el resultado."));
+        else
+            QMessageBox::information(this, tr("OK"), tr("Resultado registrado."));
     }
 
-    ui->btnJugarSiguiente->setEnabled(true);
-    ui->btnAutogenerar->setEnabled(true);
-
-    // Por ahora solo mostramos información general de la cola
-    ui->listaCalendario->addItem("Partidos pendientes en cola: " + QString::number(torneoActual->colaTamano()));
-    ui->listaCalendario->addItem("Presiona 'Jugar siguiente' para continuar.");
+    refresh();
 }
 
-void VentanaCalendario::alActualizar()
+void VentanaCalendario::on_btnAutoGenerate_clicked()
 {
-    mostrarCalendario();
+    Partido *p = torneo->jugarPartidoSiguiente();
+    if (!p) { QMessageBox::information(this, tr("Fin"), tr("No hay más partidos.")); return; }
+
+    int gl = QRandomGenerator::global()->bounded(5);
+    int gv = QRandomGenerator::global()->bounded(5);
+
+    bool esElim = torneo->esPartidoDeEliminatoria(p);
+    if (esElim && gl == gv) gl++; // avoid tie
+
+    torneo->registrarResultadoEnPartido(p, gl, gv, esElim);
+    QMessageBox::information(this, tr("Autogenerado"),
+                             tr("%1 %2 - %3 %4")
+                                 .arg(QString::fromStdString(p->getLocal()->getNombre()))
+                                 .arg(gl)
+                                 .arg(QString::fromStdString(p->getVisitante()->getNombre()))
+                                 .arg(gv));
+    refresh();
 }
 
-void VentanaCalendario::alJugarSiguiente()
-{
-    if (!torneoActual) return;
-
-    Partido* partido = torneoActual->jugarPartidoSiguiente();
-    if (!partido) {
-        QMessageBox::information(this, "Calendario", "No hay partidos pendientes.");
-        mostrarCalendario();
-        return;
-    }
-
-    bool ok1 = false, ok2 = false;
-    int golesLocal = QInputDialog::getInt(
-        this,
-        QString::fromStdString(partido->getLocal()->getNombre()),
-        "Goles:",
-        0, 0, 20, 1, &ok1
-        );
-    if (!ok1) return;
-
-    int golesVisitante = QInputDialog::getInt(
-        this,
-        QString::fromStdString(partido->getVisitante()->getNombre()),
-        "Goles:",
-        0, 0, 20, 1, &ok2
-        );
-    if (!ok2) return;
-
-    bool esEliminatoria = torneoActual->esPartidoDeEliminatoria(partido);
-    if (esEliminatoria && golesLocal == golesVisitante) {
-        QMessageBox::warning(this, "Error", "En eliminación directa no se permiten empates.");
-        return;
-    }
-
-    if (!torneoActual->registrarResultadoEnPartido(partido, golesLocal, golesVisitante, esEliminatoria)) {
-        QMessageBox::warning(this, "Error", "No se pudo registrar el resultado.");
-        return;
-    }
-
-    QString msg = QString::fromStdString(
-        partido->getLocal()->getNombre() + " (" + std::to_string(golesLocal) + ") - " +
-        partido->getVisitante()->getNombre() + " (" + std::to_string(golesVisitante) + ")"
-        );
-    QMessageBox::information(this, "Resultado registrado", msg);
-
-    mostrarCalendario();
-}
-
-void VentanaCalendario::alAutogenerar()
-{
-    if (!torneoActual) return;
-
-    Partido* partido = torneoActual->jugarPartidoSiguiente();
-    if (!partido) {
-        QMessageBox::information(this, "Calendario", "No hay partidos pendientes.");
-        mostrarCalendario();
-        return;
-    }
-
-    std::uniform_int_distribution<int> dist(0, 5);
-    int gL = dist(rng);
-    int gV = dist(rng);
-
-    bool esEliminatoria = torneoActual->esPartidoDeEliminatoria(partido);
-    if (esEliminatoria && gL == gV) {
-        if (gL < 5) gL++; else gV++;
-    }
-
-    if (!torneoActual->registrarResultadoEnPartido(partido, gL, gV, esEliminatoria)) {
-        QMessageBox::warning(this, "Error", "No se pudo registrar el resultado.");
-        return;
-    }
-
-    QString msg = QString::fromStdString(
-        partido->getLocal()->getNombre() + " (" + std::to_string(gL) + ") - " +
-        partido->getVisitante()->getNombre() + " (" + std::to_string(gV) + ")"
-        );
-    QMessageBox::information(this, "Autogenerado", msg);
-
-    mostrarCalendario();
-}
-
-void VentanaCalendario::alCerrar()
-{
-    close();
-}
+void VentanaCalendario::on_btnCerrar_clicked() { accept(); }

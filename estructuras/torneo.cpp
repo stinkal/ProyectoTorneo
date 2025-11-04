@@ -96,7 +96,7 @@ bool Torneo::cargarEstado(const std::string& archivo) {
     equipos.clear();
     if (partidoTercerLugar) { delete partidoTercerLugar; partidoTercerLugar = nullptr; }
     // limpiar arbol
-    arbolLlaves = Arbol(); 
+    arbolLlaves.clear();
 
     modalidadGrupo = j.value("modalidadGrupo", true);
 

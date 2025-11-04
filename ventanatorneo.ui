@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>VentanaTorneo</class>
+ <widget class="QDialog" name="VentanaTorneo">
+  <property name="windowTitle">
+   <string>Crear Torneo</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="lblModo">
+     <property name="text"><string>Seleccione modalidad</string></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupModulo">
+     <property name="title"><string>Modalidad</string></property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QRadioButton" name="rbCompleto">
+        <property name="text"><string>Fase de grupos + Eliminación</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="rbEliminacion">
+        <property name="text"><string>Eliminación directa</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QLabel" name="lblEquipos">Seleccionar equipos (Ctrl+click):</widget>
+   </item>
+   <item>
+    <widget class="QListWidget" name="listEquipos" />
+   </item>
+
+   <item>
+    <widget class="QGroupBox" name="groupOpciones">
+     <property name="title"><string>Opciones</string></property>
+     <layout class="QHBoxLayout" name="hOptions">
+      <item>
+       <widget class="QCheckBox" name="cbAutoGrupos">
+        <property name="text"><string>Generar grupos automáticamente</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnCargar">
+        <property name="text"><string>Cargar desde archivo</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+   <item>
+    <layout class="QHBoxLayout" name="hButtons">
+     <item>
+      <widget class="QPushButton" name="btnCrear">
+       <property name="text"><string>Crear Torneo</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnCancelar">
+       <property name="text"><string>Cancelar</string></property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

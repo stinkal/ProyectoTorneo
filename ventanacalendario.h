@@ -2,35 +2,30 @@
 #define VENTANACALENDARIO_H
 
 #include <QDialog>
-#include <QStringList>
-#include <random>
-#include "modelos/partido.h"
-#include "estructuras/torneo.h"
 
-namespace Ui {
-class VentanaCalendario;
-}
+class Torneo;
+class Partido;
+namespace Ui { class VentanaCalendario; }
 
 class VentanaCalendario : public QDialog
 {
     Q_OBJECT
-
 public:
-    explicit VentanaCalendario(Torneo* torneo, QWidget* parent = nullptr);
+    explicit VentanaCalendario(Torneo *torneo, QWidget *parent = nullptr);
     ~VentanaCalendario();
+    void refresh();
 
 private slots:
-    void alActualizar();
-    void alJugarSiguiente();
-    void alAutogenerar();
-    void alCerrar();
+    void on_btnPlayNext_clicked();
+    void on_btnAutoGenerate_clicked();
+    void on_btnCerrar_clicked();
 
 private:
     Ui::VentanaCalendario *ui;
-    Torneo* torneoActual;
-    std::mt19937 rng;
+    Torneo *torneo;
 
-    void mostrarCalendario();
+    void playMatchInteractively(Partido *p);
+    void showMatchList();
 };
 
 #endif // VENTANACALENDARIO_H

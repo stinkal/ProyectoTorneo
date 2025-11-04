@@ -20,7 +20,8 @@ public:
 
     Arbol();
     ~Arbol();
-    NodoArbol* construir(const std::vector<Equipo*>& equipos);  //  clase Arbol es dueño de estos partidos por puntero, no valor
+    Arbol(const Arbol&) = delete;
+    Arbol& operator=(const Arbol&) = delete;
     NodoArbol* buscarPrimerPartidoNoJugado() const;
     void jugar(NodoArbol* nodo);
     Equipo* obtenerCampeon() const;
@@ -31,6 +32,8 @@ public:
     Equipo* obtenerPerdedor(Partido* p) const;
     std::string getTextoEstructura() const;
     Equipo* obtenerSubcampeon() const;
+    void clear();
+    NodoArbol* construir(const std::vector<Equipo*>& equipos);
 
 
 private:
