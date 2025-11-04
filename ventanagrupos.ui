@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>VentanaGrupos</class>
+ <widget class="QDialog" name="VentanaGrupos">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>700</width>
+    <height>420</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Gestión de Grupos</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayoutMain">
+   <item>
+    <layout class="QHBoxLayout" name="topLayout">
+     <item>
+      <layout class="QVBoxLayout" name="leftCol">
+       <item>
+        <widget class="QLabel" name="lblGrupos">
+         <property name="text">
+          <string>Grupos creados</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listaGrupos"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="rightCol">
+       <item>
+        <widget class="QLabel" name="lblEquiposDisponibles">
+         <property name="text">
+          <string>Equipos disponibles</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listaEquipos"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblInfo">
+         <property name="text">
+          <string>Nota: los equipos seleccionados manualmente se removerán de la lista disponible para evitar duplicados entre grupos.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonsRow">
+     <item>
+      <widget class="QPushButton" name="btnGenerarAuto">
+       <property name="text">
+        <string>Generar Automático</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnCrearManual">
+       <property name="text">
+        <string>Crear Grupo Manual</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnEliminar">
+       <property name="text">
+        <string>Eliminar Grupo Seleccionado</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnLimpiar">
+       <property name="text">
+        <string>Limpiar Todos</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnActualizar">
+       <property name="text">
+        <string>Actualizar</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnGuardar">
+       <property name="text">
+        <string>Aceptar</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnCancelar">
+       <property name="text">
+        <string>Cancelar</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

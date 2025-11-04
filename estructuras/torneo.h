@@ -20,7 +20,6 @@ private:
     bool modalidadGrupo;
     mutable std::mt19937 rng;  //  aleatorio
     std::vector<Equipo*> getClasificados() const;
-    void limpiarGrupos();
     static bool esPotenciaDe2(int n);
     std::unordered_set<Partido*> partidosEncolados;
     void encolarPartidosArbol();
@@ -33,6 +32,7 @@ public:
     bool agregarEquipo(Equipo* e);
     bool eliminarEquipo(const std::string& nombre);
     std::vector<std::string> getNombresEquipos() const;
+    void limpiarGrupos();
 
     void configurarTorneo(bool modoGrupo);
     bool esModalidadGrupo() const;
